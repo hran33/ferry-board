@@ -1,0 +1,5 @@
+WIFI_CONFIG.py
+screenshot.raw
+screenshot.png
+__pycache__/
+*.pyc
