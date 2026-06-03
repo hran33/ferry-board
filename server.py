@@ -225,6 +225,10 @@ class Handler(BaseHTTPRequestHandler):
             self.send_response(500)
             self.end_headers()
 
+    def do_HEAD(self):
+        self.send_response(200)
+        self.end_headers()
+
     def log_message(self, fmt, *args):
         print(f"[http] {self.address_string()} {fmt % args}")
 
