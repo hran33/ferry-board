@@ -124,9 +124,27 @@ def fetch_alerts(now_ms: int) -> list[dict]:
 
 # ── Core logic ────────────────────────────────────────────────────────────────
 
+def ny_utc_offset(now_utc: datetime) -> timedelta:
+    """US Eastern offset for a UTC timestamp, applying the DST rule in effect since 2007:
+    EDT (-4) from the 2nd Sunday of March at 2 AM local to the 1st Sunday of November
+    at 2 AM local; EST (-5) otherwise. Computed, not hardcoded, so it doesn't need a
+    manual seasonal flip (which is what caused the schedule to run an hour off after
+    DST ended)."""
+    year = now_utc.year
+
+    def nth_sunday(month: int, n: int) -> datetime:
+        d = datetime(year, month, 1, tzinfo=timezone.utc)
+        d += timedelta(days=(6 - d.weekday()) % 7)  # first Sunday of the month
+        return d + timedelta(weeks=n - 1)
+
+    dst_start = nth_sunday(3, 2).replace(hour=7)    # 2 AM EST == 07:00 UTC
+    dst_end   = nth_sunday(11, 1).replace(hour=6)   # 2 AM EDT == 06:00 UTC
+    return timedelta(hours=-4) if dst_start <= now_utc < dst_end else timedelta(hours=-5)
+
+
 def compute_departures() -> dict:
     now_utc   = datetime.now(timezone.utc)
-    now_local = now_utc + timedelta(hours=-4)   # EDT; change to -5 in winter
+    now_local = now_utc + ny_utc_offset(now_utc)
     today     = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
     now_ms    = int(now_utc.timestamp() * 1000)
 
@@ -180,6 +198,7 @@ def compute_departures() -> dict:
     return {
         "origin":      "Greenpoint",
         "destination": "East 34th Street",
+        "now_local":   fmt(now_local),
         "departures": [
             {
                 "time":         fmt(dt),
