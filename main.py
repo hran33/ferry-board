@@ -90,14 +90,6 @@ def rounded_rect(x, y, w, h, r=4):
     display.circle(x + r,         y + h - r - 1, r)
     display.circle(x + w - r - 1, y + h - r - 1, r)
 
-def clock_str():
-    import utime
-    t = utime.localtime()
-    h_ny = (t[3] - 4) % 24
-    h12  = h_ny % 12 or 12
-    ampm = "AM" if h_ny < 12 else "PM"
-    return "{:d}:{:02d} {}".format(h12, t[4], ampm)
-
 # ── draw sections ─────────────────────────────────────────────────────────────
 def draw_header():
     display.set_pen(HDR_BG)
@@ -114,7 +106,8 @@ def draw_header():
     display.text("EAST RIVER ROUTE", 62, 25, scale=1)
     display.text("Greenpoint", 62, 38, scale=3)
     display.text("> East 34th St", 62, 70, scale=1)
-    text_right(clock_str(), W - 10, 43, scale=2)
+    clock = _data.get("now_local", "--:--") if _data else "--:--"
+    text_right(clock, W - 10, 43, scale=2)
 
 
 def draw_row(idx, dep, y):
